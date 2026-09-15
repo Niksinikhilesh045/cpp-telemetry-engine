@@ -108,3 +108,17 @@ if(BUILD_TESTING)
     include(GoogleTest)
     gtest_discover_tests(telemetry_tests)
 endif()
+
+if(WIN32)
+    target_compile_definitions(telemetry_core PUBLIC
+        _WIN32_WINNT=0x0A00
+        WIN32_LEAN_AND_MEAN
+        NOMINMAX
+    )
+
+    target_compile_definitions(device_simulator PRIVATE
+        _WIN32_WINNT=0x0A00
+        WIN32_LEAN_AND_MEAN
+        NOMINMAX
+    )
+endif()
