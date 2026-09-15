@@ -5,13 +5,6 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# CMake 3.30+ removed the legacy FindBoost module. Prefer Boost's
-# package-provided config files when the policy is available, while
-# preserving compatibility with older supported CMake versions.
-if(POLICY CMP0167)
-    cmake_policy(SET CMP0167 NEW)
-endif()
-
 option(TELEMETRY_ENABLE_ASAN "Enable AddressSanitizer" OFF)
 option(TELEMETRY_ENABLE_UBSAN "Enable UndefinedBehaviorSanitizer" OFF)
 option(TELEMETRY_ENABLE_TSAN "Enable ThreadSanitizer" OFF)
@@ -21,7 +14,19 @@ if(TELEMETRY_ENABLE_TSAN AND (TELEMETRY_ENABLE_ASAN OR TELEMETRY_ENABLE_UBSAN))
 endif()
 
 find_package(Threads REQUIRED)
-find_package(Boost 1.70 REQUIRED)
+
+# CMake 3.30+ removed the legacy FindBoost module under CMP0167. Prefer
+# BoostConfig.cmake when available, while retaining a fallback for older Boost
+# installations and CMake versions.
+if(POLICY CMP0167)
+    find_package(Boost 1.70 CONFIG QUIET)
+    if(NOT Boost_FOUND)
+        cmake_policy(SET CMP0167 OLD)
+        find_package(Boost 1.70 REQUIRED)
+    endif()
+else()
+    find_package(Boost 1.70 REQUIRED)
+endif()
 
 function(telemetry_apply_warnings target)
     if(MSVC)
@@ -59,8 +64,8 @@ add_library(telemetry_core
     src/engine.cpp
 )
 
-target_include_directories(telemetry_core PUBLIC include ${Boost_INCLUDE_DIRS})
-target_link_libraries(telemetry_core PUBLIC Threads::Threads)
+target_include_directories(telemetry_core PUBLIC include)
+target_link_libraries(telemetry_core PUBLIC Threads::Threads Boost::headers)
 target_compile_definitions(telemetry_core PUBLIC
     BOOST_ERROR_CODE_HEADER_ONLY
     BOOST_SYSTEM_NO_DEPRECATED
@@ -74,8 +79,7 @@ telemetry_apply_warnings(telemetry_engine)
 telemetry_apply_sanitizers(telemetry_engine)
 
 add_executable(device_simulator simulator/device_simulator.cpp)
-target_include_directories(device_simulator PRIVATE ${Boost_INCLUDE_DIRS})
-target_link_libraries(device_simulator PRIVATE Threads::Threads)
+target_link_libraries(device_simulator PRIVATE Threads::Threads Boost::headers)
 target_compile_definitions(device_simulator PRIVATE
     BOOST_ERROR_CODE_HEADER_ONLY
     BOOST_SYSTEM_NO_DEPRECATED
