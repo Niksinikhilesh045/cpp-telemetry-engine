@@ -1,4 +1,6 @@
 build/
+build-win/
+build-*/
 cmake-build-*/
 out/
 *.o
@@ -10,6 +12,7 @@ out/
 *.exe
 *.log
 alerts.jsonl
+*-alerts.jsonl
 .vscode/
 .idea/
 .DS_Store
