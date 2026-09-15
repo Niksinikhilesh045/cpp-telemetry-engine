@@ -5,6 +5,13 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# CMake 3.30+ removed the legacy FindBoost module. Prefer Boost's
+# package-provided config files when the policy is available, while
+# preserving compatibility with older supported CMake versions.
+if(POLICY CMP0167)
+    cmake_policy(SET CMP0167 NEW)
+endif()
+
 option(TELEMETRY_ENABLE_ASAN "Enable AddressSanitizer" OFF)
 option(TELEMETRY_ENABLE_UBSAN "Enable UndefinedBehaviorSanitizer" OFF)
 option(TELEMETRY_ENABLE_TSAN "Enable ThreadSanitizer" OFF)
